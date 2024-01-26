@@ -22,7 +22,8 @@ using NitroxClient.GameLogic.PlayerLogic.PlayerModel.Abstract;
 using NitroxClient.GameLogic.PlayerLogic.PlayerPreferences;
 using NitroxClient.GameLogic.Settings;
 using NitroxClient.GameLogic.Spawning.Metadata;
-using NitroxClient.GameLogic.Spawning.Metadata.Extractor;
+using NitroxClient.GameLogic.Spawning.Metadata.Extractor.Abstract;
+using NitroxClient.GameLogic.Spawning.Metadata.Processor.Abstract;
 using NitroxClient.Map;
 using NitroxModel.Core;
 using NitroxModel.Helper;
@@ -54,7 +55,7 @@ namespace NitroxClient
             RegisterInitialSyncProcessors(containerBuilder);
         }
 
-        private static void RegisterCoreDependencies(ContainerBuilder containerBuilder)
+        private void RegisterCoreDependencies(ContainerBuilder containerBuilder)
         {
 #if DEBUG
             containerBuilder.RegisterAssemblyTypes(currentAssembly)
@@ -109,12 +110,13 @@ namespace NitroxClient
             containerBuilder.RegisterType<Vehicles>().InstancePerLifetimeScope();
             containerBuilder.RegisterType<AI>().InstancePerLifetimeScope();
             containerBuilder.RegisterType<PlayerChatManager>().InstancePerLifetimeScope();
+            containerBuilder.RegisterType<SimulationOwnership>().InstancePerLifetimeScope();
+            containerBuilder.RegisterType<LiveMixinManager>().InstancePerLifetimeScope();
             containerBuilder.RegisterType<Entities>().InstancePerLifetimeScope();
             containerBuilder.RegisterType<MedkitFabricator>().InstancePerLifetimeScope();
             containerBuilder.RegisterType<Items>().InstancePerLifetimeScope();
             containerBuilder.RegisterType<EquipmentSlots>().InstancePerLifetimeScope();
             containerBuilder.RegisterType<ItemContainers>().InstancePerLifetimeScope();
-            containerBuilder.RegisterType<SimulationOwnership>().InstancePerLifetimeScope();
             containerBuilder.RegisterType<Cyclops>().InstancePerLifetimeScope();
             containerBuilder.RegisterType<Rockets>().InstancePerLifetimeScope();
             containerBuilder.RegisterType<MobileVehicleBay>().InstancePerLifetimeScope();
@@ -125,7 +127,6 @@ namespace NitroxClient
             containerBuilder.RegisterType<SeamothModulesEvent>().InstancePerLifetimeScope();
             containerBuilder.RegisterType<Fires>().InstancePerLifetimeScope();
             containerBuilder.RegisterType<FMODSystem>().InstancePerLifetimeScope();
-            containerBuilder.RegisterType<LiveMixinManager>().InstancePerLifetimeScope();
             containerBuilder.RegisterType<NitroxSettingsManager>().InstancePerLifetimeScope();
             containerBuilder.RegisterType<ThrottledPacketSender>().InstancePerLifetimeScope();
             containerBuilder.RegisterType<PlayerCinematics>().InstancePerLifetimeScope();
@@ -136,13 +137,16 @@ namespace NitroxClient
         private void RegisterMetadataDependencies(ContainerBuilder containerBuilder)
         {
             containerBuilder.RegisterAssemblyTypes(currentAssembly)
-                            .AssignableTo<EntityMetadataExtractor>()
-                            .As<EntityMetadataExtractor>()
-                            .InstancePerLifetimeScope();
+                            .AssignableTo<IEntityMetadataExtractor>()
+                            .As<IEntityMetadataExtractor>()
+                            .AsSelf()
+                            .SingleInstance();
             containerBuilder.RegisterAssemblyTypes(currentAssembly)
-                            .AssignableTo<EntityMetadataProcessor>()
-                            .As<EntityMetadataProcessor>()
-                            .InstancePerLifetimeScope();
+                            .AssignableTo<IEntityMetadataProcessor>()
+                            .As<IEntityMetadataProcessor>()
+                            .AsSelf()
+                            .SingleInstance();
+            containerBuilder.RegisterType<EntityMetadataManager>().InstancePerLifetimeScope();
         }
 
         private void RegisterPacketProcessors(ContainerBuilder containerBuilder)
